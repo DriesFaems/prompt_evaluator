@@ -10,15 +10,14 @@ os.environ["GROQ_API_KEY"] = groq_api_key
 client = Groq()
 
 # Create a title for the app
-st.title("Prompt Evaluator")
+st.title("Prompt Feedback Chatbot")
 
 # Create a description for the app
 st.write(
     """
-    This app evaluates student prompts based on a set of grading criteria. 
-    The response includes a grade for the prompt, a justification for the grade, 
-    and suggestions for improvement. Input a prompt, and then refine it based 
-    on the feedback received.
+    Welcome to the Prompt Feedback Chatbot! 
+    This chatbot evaluates student prompts based on a set of grading criteria.
+    Enter your prompt, receive feedback, and continue refining your prompts.
     """
 )
 
@@ -64,26 +63,25 @@ def evaluate_prompt(prompt):
     return feedback
 
 
-# Initialize session state to store prompts
-if "prompt_history" not in st.session_state:
-    st.session_state["prompt_history"] = []
+# Initialize session state to store the conversation history
+if "conversation_history" not in st.session_state:
+    st.session_state["conversation_history"] = []
 
-# Display previous feedback
-if st.session_state["prompt_history"]:
-    st.write("Previous Feedback:")
-    for idx, (prompt, feedback) in enumerate(st.session_state["prompt_history"]):
-        st.write(f"Prompt {idx + 1}:")
-        st.write(prompt)
-        st.write(feedback)
-        st.write("")
+# Display previous conversation
+if st.session_state["conversation_history"]:
+    st.write("Conversation:")
+    for entry in st.session_state["conversation_history"]:
+        st.write(entry)
 
 # Input for prompt
-prompt = st.text_input("Enter the prompt you would like to evaluate:")
+prompt = st.text_input("You:")
 
 # Button to evaluate the prompt
-if st.button("Evaluate Prompt"):
+if st.button("Send"):
     feedback = evaluate_prompt(prompt)
-    st.write(feedback)
-    st.session_state["prompt_history"].append((prompt, feedback))
+    st.session_state["conversation_history"].append(f"You: {prompt}")
+    st.session_state["conversation_history"].append(f"Bot: {feedback}")
+    st.write(f"You: {prompt}")
+    st.write(f"Bot: {feedback}")
 else:
-    st.write("Click the button to evaluate the prompt.")
+    st.write("Type a prompt and click 'Send'.")
