@@ -62,11 +62,13 @@ def evaluate_prompt(prompt):
         feedback += str(chunk.choices[0].delta.content)
     return feedback
 
-# Initialize session state to store the conversation history and current prompt
+# Initialize session state to store the conversation history, current prompt, and feedback
 if "conversation_history" not in st.session_state:
     st.session_state["conversation_history"] = []
 if "current_prompt" not in st.session_state:
     st.session_state["current_prompt"] = ""
+if "feedback" not in st.session_state:
+    st.session_state["feedback"] = ""
 
 # Display previous conversation
 if st.session_state["conversation_history"]:
@@ -80,17 +82,17 @@ prompt = st.text_input(prompt_input_label, st.session_state["current_prompt"])
 
 # Button to evaluate the prompt
 if st.button("Send"):
-    feedback = evaluate_prompt(prompt)
+    st.session_state["feedback"] = evaluate_prompt(prompt)
     st.session_state["conversation_history"].append(f"You: {prompt}")
-    st.session_state["conversation_history"].append(f"Bot: {feedback}")
+    st.session_state["conversation_history"].append(f"Bot: {st.session_state['feedback']}")
     st.session_state["current_prompt"] = ""
     st.write(f"You: {prompt}")
-    st.write(f"Bot: {feedback}")
+    st.write(f"Bot: {st.session_state['feedback']}")
 else:
     st.write("Type a prompt and click 'Send'.")
 
 # Allow the user to input a new optimized prompt
-if feedback:
+if st.session_state["feedback"]:
     optimized_prompt = st.text_input("Provide an optimized prompt:")
     if st.button("Submit Optimized Prompt"):
         feedback = evaluate_prompt(optimized_prompt)
@@ -98,4 +100,5 @@ if feedback:
         st.session_state["conversation_history"].append(f"Bot: {feedback}")
         st.write(f"You: {optimized_prompt}")
         st.write(f"Bot: {feedback}")
+
 
