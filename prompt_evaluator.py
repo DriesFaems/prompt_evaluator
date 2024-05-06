@@ -1,30 +1,54 @@
-from groq import Groq
 import os
-import tomllib
 import streamlit as st
+from groq import Groq
 
-
+# Set up API key
 groq_api_key = st.secrets["GROQ_API_KEY"]
 os.environ["GROQ_API_KEY"] = groq_api_key
 
-# ask user to input the initial prompt
+# Initialize Groq client
+client = Groq()
 
-prompt = st.text_input("Enter the prompt you would like to evaluate:")
+# Create a title for the app
+st.title("Prompt Evaluator")
 
-# create click button to start
+# Create a description for the app
+st.write(
+    """
+    This app evaluates student prompts based on a set of grading criteria. 
+    The response includes a grade for the prompt, a justification for the grade, 
+    and suggestions for improvement. Input a prompt, and then refine it based 
+    on the feedback received.
+    """
+)
 
-if st.button('Evaluate Prompt'):
-    client = Groq()
+# Function to evaluate the prompt
+def evaluate_prompt(prompt):
     completion = client.chat.completions.create(
         model="llama3-70b-8192",
         messages=[
             {
                 "role": "system",
-                "content": "You are an expert in evaluating student prompts. \n\nPlease execute the following steps for the prompt provided by the student:\n\nStep 1: Grade the prompt of a student on a scale of 0 to 10. The grade should reflect the following grading criteria: \nCriterium 1: More specific prompts should be graded higher\nCriterium 2: Few shot prompts and chain of thought prompts should be graded higher than zero-shot prompts\nCriterium 3: Prompts that clearly specify the identity of the user and the assistant should be graded higher\nCriterium 4: prompts that stipulate a clear expected output should be graded higher \nCriterium 5: prompts that are written in a friendly and encouraging manner should be graded higher\nStep 2: Provide a clear justification of the grade. Explain how the student performed on the different criteria\nStep 3:  Give the student suggestions on how to improve on specific grading criteria\n"
+                "content": """You are an expert in evaluating student prompts. 
+                Please execute the following steps for the prompt provided by the student:
+                
+                Step 1: Grade the prompt of a student on a scale of 0 to 10. 
+                The grade should reflect the following grading criteria: 
+                - More specific prompts should be graded higher
+                - Few shot prompts and chain of thought prompts should be graded higher than zero-shot prompts
+                - Prompts that clearly specify the identity of the user and the assistant should be graded higher
+                - Prompts that stipulate a clear expected output should be graded higher 
+                - Prompts that are written in a friendly and encouraging manner should be graded higher
+                
+                Step 2: Provide a clear justification of the grade. 
+                Explain how the student performed on the different criteria
+                
+                Step 3: Give the student suggestions on how to improve on specific grading criteria
+                """
             },
             {
                 "role": "user",
-                "content": prompt
+                "content": prompt,
             },
         ],
         temperature=1,
@@ -33,9 +57,33 @@ if st.button('Evaluate Prompt'):
         stream=True,
         stop=None,
     )
-    text = ""
+
+    feedback = ""
     for chunk in completion:
-        text = text + str(chunk.choices[0].delta.content)
-    st.write(text)
+        feedback += str(chunk.choices[0].delta.content)
+    return feedback
+
+
+# Initialize session state to store prompts
+if "prompt_history" not in st.session_state:
+    st.session_state["prompt_history"] = []
+
+# Display previous feedback
+if st.session_state["prompt_history"]:
+    st.write("Previous Feedback:")
+    for idx, (prompt, feedback) in enumerate(st.session_state["prompt_history"]):
+        st.write(f"Prompt {idx + 1}:")
+        st.write(prompt)
+        st.write(feedback)
+        st.write("")
+
+# Input for prompt
+prompt = st.text_input("Enter the prompt you would like to evaluate:")
+
+# Button to evaluate the prompt
+if st.button("Evaluate Prompt"):
+    feedback = evaluate_prompt(prompt)
+    st.write(feedback)
+    st.session_state["prompt_history"].append((prompt, feedback))
 else:
-    st.write('Click the button to evaluate the prompt')
+    st.write("Click the button to evaluate the prompt.")
