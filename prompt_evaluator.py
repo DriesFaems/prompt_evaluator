@@ -10,11 +10,11 @@ os.environ["GROQ_API_KEY"] = groq_api_key
 client = Groq()
 
 # Create a title for the app
-st.title("Prompt Feedback Chatbot")
+st.title("Prompt Evaluator Chatbot")
 
 # Create a description for the app
 
-st.markdown('This chatbot is designed to help you evaluate your prompts. You can enter a prompt, and the chatbot will provide you with a grade, justification, and suggestions for improvement based on the grading criteria.')
+st.markdown('This chatbot is designed to help you in optimizing your prompt engineering skills. You can enter a prompt, and the chatbot will provide you with a grade, justification, and suggestions for improvement based on the grading criteria.')
 
 # Function to evaluate the prompt
 def evaluate_prompt(prompt):
