@@ -12,15 +12,6 @@ client = Groq()
 # Create a title for the app
 st.title("Prompt Feedback Chatbot")
 
-# Create a description for the app
-st.write(
-    """
-    Welcome to the Prompt Feedback Chatbot! 
-    This chatbot evaluates student prompts based on a set of grading criteria.
-    Enter your prompt, receive feedback, and continue refining your prompts.
-    """
-)
-
 # Function to evaluate the prompt
 def evaluate_prompt(prompt):
     completion = client.chat.completions.create(
@@ -62,43 +53,29 @@ def evaluate_prompt(prompt):
         feedback += str(chunk.choices[0].delta.content)
     return feedback
 
-# Initialize session state to store the conversation history, current prompt, and feedback
-if "conversation_history" not in st.session_state:
-    st.session_state["conversation_history"] = []
-if "current_prompt" not in st.session_state:
-    st.session_state["current_prompt"] = ""
-if "feedback" not in st.session_state:
-    st.session_state["feedback"] = ""
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Display previous conversation
-if st.session_state["conversation_history"]:
-    st.write("Conversation:")
-    for entry in st.session_state["conversation_history"]:
-        st.write(entry)
+# Display chat messages from history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Input for the prompt
-prompt_input_label = "Refine your prompt:" if st.session_state["current_prompt"] else "Enter your prompt:"
-prompt = st.text_input(prompt_input_label, st.session_state["current_prompt"])
+# Handle user input
+if prompt := st.chat_input("Enter your prompt:"):
+    # Display user message in chat message container
+    st.chat_message("user").markdown(prompt)
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-# Button to evaluate the prompt
-if st.button("Send"):
-    st.session_state["feedback"] = evaluate_prompt(prompt)
-    st.session_state["conversation_history"].append(f"You: {prompt}")
-    st.session_state["conversation_history"].append(f"Bot: {st.session_state['feedback']}")
-    st.session_state["current_prompt"] = ""
-    st.write(f"You: {prompt}")
-    st.write(f"Bot: {st.session_state['feedback']}")
-else:
-    st.write("Type a prompt and click 'Send'.")
+    # Generate response
+    response = evaluate_prompt(prompt)
 
-# Allow the user to input a new optimized prompt
-if st.session_state["feedback"]:
-    optimized_prompt = st.text_input("Provide an optimized prompt:")
-    if st.button("Submit Optimized Prompt"):
-        feedback = evaluate_prompt(optimized_prompt)
-        st.session_state["conversation_history"].append(f"You: {optimized_prompt}")
-        st.session_state["conversation_history"].append(f"Bot: {feedback}")
-        st.write(f"You: {optimized_prompt}")
-        st.write(f"Bot: {feedback}")
+    # Display assistant response in chat message container
+    st.chat_message("assistant").markdown(response)
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
 
 
